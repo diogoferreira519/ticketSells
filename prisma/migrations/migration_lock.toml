@@ -1,0 +1,4 @@
+# This file should be part of a Prisma Migrate history.
+# Do not edit manually except when creating the initial migration offline.
+
+provider = "postgresql"
