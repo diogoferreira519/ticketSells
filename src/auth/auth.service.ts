@@ -54,13 +54,14 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    let invalidCredentials = "Credenciais inválidas"
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(invalidCredentials);
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.senha);
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(invalidCredentials);
     }
 
     return {

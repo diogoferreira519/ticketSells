@@ -4,6 +4,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { FilmeModule } from './filme/filme.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 const clientDistPath = join(__dirname, '..', 'client', 'dist');
@@ -13,11 +14,12 @@ const clientDistPath = join(__dirname, '..', 'client', 'dist');
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
+    FilmeModule,
     ...(existsSync(clientDistPath)
       ? [
           ServeStaticModule.forRoot({
             rootPath: clientDistPath,
-            exclude: ['/auth/(.*)'],
+            exclude: ['/auth/(.*)', '/filmes/(.*)'],
           }),
         ]
       : []),
