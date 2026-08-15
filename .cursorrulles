@@ -1,0 +1,87 @@
+# ==============================================================================
+# .cursorrules — ticketSells
+# NestJS + React (Vite) + Prisma + PostgreSQL
+# Contratos = DTOs em src/**/dto/*.dto.ts e prisma/schema.prisma
+# ==============================================================================
+# ------------------------------------------------------------------------------
+# 1. STACK (não inventar Next.js, Drizzle, FastAPI, role enum único)
+# ------------------------------------------------------------------------------
+# - API: NestJS, class-validator, JWT
+# - Client: React + Vite (TypeScript)
+# - DB: PostgreSQL via Prisma (cuid(), @@map snake_case)
+# - Orquestração: Docker Compose
+# - Auth: POST /auth/register { nome, email, password }, POST /auth/login { email, password }, GET /auth/me
+# ------------------------------------------------------------------------------
+# 2. PAPÉIS (flags booleanas, não role: ORGANIZER | CUSTOMER | PORTARIA)
+# ------------------------------------------------------------------------------
+# Usuario: isOrg, isCliente (default true), isPortaria — um usuário pode ter mais de uma flag.
+# - Organizador (isOrg): cria/gerencia Evento (idUserOrganizador)
+# - Cliente (isCliente): Pedido, Ingresso, Assento
+# - Portaria (isPortaria): valida QR (status Ingresso)
+# ------------------------------------------------------------------------------
+# 3. CONVENÇÕES DE DTO
+# ------------------------------------------------------------------------------
+# - Create*: campos obrigatórios com decorators; opcionais só com @IsOptional()
+# - Update*: todos os campos @IsOptional() + mesmos validators do Create
+# - Não usar PartialType se o padrão do repo for DTO duplicado
+# - IDs: string (cuid). Datas no DTO: ISO string (@IsDateString), Prisma DateTime
+# - Dinheiro: @IsNumber() @Min(0) no DTO; Prisma Decimal(10,2)
+# - Inteiros (capacidade, ingressosDisponiveis): @IsInt() @Min(0)
+# - Enums Prisma: @IsEnum(PagamentoStatus | IngressoStatus)
+# - Auth usa password (EN); Usuario CRUD usa senha (PT). Não misturar nos módulos.
+# - Nunca expor senha/hash em responses
+# PagamentoStatus: PENDENTE | PAGO | CANCELADO | FALHOU
+# IngressoStatus: VALIDO | USADO | CANCELADO
+# ------------------------------------------------------------------------------
+# 4. CONTRATOS POR ENTIDADE (fonte da verdade)
+# ------------------------------------------------------------------------------
+# Auth
+# RegisterDto: nome, email, password (min 6)
+# LoginDto: email, password (min 6)
+# Registro cria Usuario com isCliente=true (defaults Prisma)
+# Usuario — CreateUsuarioDto
+# nome, email, senha (min 6)
+# isOrg?, isCliente?, isPortaria?
+# UpdateUsuarioDto: os mesmos, todos opcionais
+# Evento — CreateEventoDto
+# idFilme, idUserOrganizador, titulo, descricao, imgFilme, local
+# data (ISO), preco (>=0), capacidade (>=0), ingressosDisponiveis (>=0)
+# UpdateEventoDto: todos opcionais
+# Denormalização intencional: ingressosDisponiveis no Evento (contador, não só COUNT)
+# Assento — CreateAssentoDto
+# idUser, descricao, disponivel? (default true)
+# UpdateAssentoDto: todos opcionais
+# idUser no assento: dono/reserva; disponível = estoque rápido sem join
+# Pedido — CreatePedidoDto
+# idUser, total (>=0), pagamentoStatus? (default PENDENTE)
+# UpdatePedidoDto: todos opcionais
+# idUser denormalizado no pedido (não só via Ingresso)
+# Ingresso — CreateIngressoDto
+# idPedido, idUser, idAssento, qrcode, link
+# status? (default VALIDO), usadoEm? (ISO)
+# UpdateIngressoDto: todos opcionais
+# idUser no ingresso mesmo com idPedido → listar "meus ingressos" sem join em Pedido
+# ------------------------------------------------------------------------------
+# 5. MODELAGEM / PERFORMANCE
+# ------------------------------------------------------------------------------
+# Preferir flags e FKs denormalizadas (idUser em Pedido, Assento, Ingresso) a joins profundos.
+# Contadores (ingressosDisponiveis) e booleanos (disponivel, papéis) são aceitos de propósito.
+# Manter nomes PT do schema/DTOs (idUser, idFilme, imgFilme, idUserOrganizador). Não "traduzir" para customerId/eventId.
+# ------------------------------------------------------------------------------
+# 6. REGRAS DE NEGÓCIO (alinhar implementação aos campos existentes)
+# ------------------------------------------------------------------------------
+# Double-booking: transação + Assento.disponivel e/ou Evento.ingressosDisponiveis; não vender se indisponível/contador 0.
+# Pagamento: Pedido.pagamentoStatus; ingressos só efetivos se PAGO (ou fluxo equivalente explícito).
+# Portaria: update atômico de Ingresso.status VALIDO → USADO + usadoEm; se já USADO, não revalidar.
+# QR: qrcode e link no Ingresso; não usar ID sequencial previsível como único segredo.
+# Organizador do evento: idUserOrganizador deve ser Usuario com isOrg.
+# ------------------------------------------------------------------------------
+# 7. FRONT
+# ------------------------------------------------------------------------------
+# React/Vite, TypeScript. Payloads iguais aos DTOs (camelCase: idUser, pagamentoStatus, isOrg).
+# Proxy /auth no Vite. Não assumir App Router/Next.
+# ------------------------------------------------------------------------------
+# 8. README / SEED
+# ------------------------------------------------------------------------------
+# README: stack real, Docker, migrations, decisões de denormalização.
+# Seed (quando existir): usuários com flags (não role string) e senha alinhada ao MinLength(6).
