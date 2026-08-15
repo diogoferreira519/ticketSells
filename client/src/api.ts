@@ -1,7 +1,10 @@
 export type User = {
   id: string;
+  nome: string;
   email: string;
-  createdAt: string;
+  isOrg: boolean;
+  isCliente: boolean;
+  isPortaria: boolean;
 };
 
 async function parseError(res: Response): Promise<string> {
@@ -30,11 +33,11 @@ export async function loginRequest(email: string, password: string) {
   return (await res.json()) as { access_token: string };
 }
 
-export async function registerRequest(email: string, password: string) {
+export async function registerRequest(nome: string, email: string, password: string) {
   const res = await fetch('/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ nome, email, password }),
   });
 
   if (!res.ok) {

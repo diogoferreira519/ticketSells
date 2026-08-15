@@ -17,7 +17,7 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({
+    const existing = await this.prisma.usuario.findUnique({
       where: { email: dto.email },
     });
 
@@ -26,15 +26,20 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.usuario.create({
       data: {
+        nome: dto.nome,
         email: dto.email,
-        password: hashedPassword,
+        senha: hashedPassword,
+        isCliente: true,
       },
       select: {
         id: true,
+        nome: true,
         email: true,
-        createdAt: true,
+        isOrg: true,
+        isCliente: true,
+        isPortaria: true,
       },
     });
 
@@ -45,7 +50,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.usuario.findUnique({
       where: { email: dto.email },
     });
 
@@ -53,7 +58,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.password);
+    const passwordValid = await bcrypt.compare(dto.password, user.senha);
     if (!passwordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -64,12 +69,15 @@ export class AuthService {
   }
 
   async me(userId: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.usuario.findUnique({
       where: { id: userId },
       select: {
         id: true,
+        nome: true,
         email: true,
-        createdAt: true,
+        isOrg: true,
+        isCliente: true,
+        isPortaria: true,
       },
     });
 

@@ -6,6 +6,7 @@ import { useAuth } from '../auth';
 export default function RegisterPage() {
   const { setToken } = useAuth();
   const navigate = useNavigate();
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +17,7 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const data = await registerRequest(email, password);
+      const data = await registerRequest(nome, email, password);
       setToken(data.access_token);
       navigate('/', { replace: true });
     } catch (err) {
@@ -37,6 +38,18 @@ export default function RegisterPage() {
         </p>
         <h1 className="m-0 text-3xl font-semibold leading-tight">Criar conta</h1>
         <p className="m-0 text-zinc-400">Registre-se para começar</p>
+
+        <label className="grid gap-1.5 text-sm text-zinc-300">
+          Nome
+          <input
+            className="w-full rounded-lg border border-red-900/60 bg-black/70 px-3.5 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-500 focus:ring-2 focus:ring-red-500/40"
+            type="text"
+            autoComplete="name"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+          />
+        </label>
 
         <label className="grid gap-1.5 text-sm text-zinc-300">
           Email

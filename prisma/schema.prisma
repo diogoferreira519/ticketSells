@@ -7,11 +7,93 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
+enum PagamentoStatus {
+  PENDENTE
+  PAGO
+  CANCELADO
+  FALHOU
+}
 
-  @@map("users")
+enum IngressoStatus {
+  VALIDO
+  USADO
+  CANCELADO
+}
+
+model Usuario {
+  id         String  @id @default(cuid())
+  nome       String
+  email      String  @unique
+  senha      String
+  isOrg      Boolean @default(false) @map("is_org")
+  isCliente  Boolean @default(true) @map("is_cliente")
+  isPortaria Boolean @default(false) @map("is_portaria")
+
+  pedidos   Pedido[]
+  assentos  Assento[]
+  ingressos Ingresso[]
+  eventos   Evento[]
+
+  @@map("usuarios")
+}
+
+model Pedido {
+  id              String          @id @default(cuid())
+  idUser          String          @map("id_user")
+  total           Decimal         @db.Decimal(10, 2)
+  pagamentoStatus PagamentoStatus @default(PENDENTE) @map("pagamento_status")
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+
+  usuario   Usuario    @relation(fields: [idUser], references: [id])
+  ingressos Ingresso[]
+
+  @@map("pedidos")
+}
+
+model Assento {
+  id         String  @id @default(cuid())
+  idUser     String  @map("id_user")
+  descricao  String
+  disponivel Boolean @default(true)
+
+  usuario   Usuario    @relation(fields: [idUser], references: [id])
+  ingressos Ingresso[]
+
+  @@map("assentos")
+}
+
+model Ingresso {
+  id        String         @id @default(cuid())
+  idPedido  String         @map("id_pedido")
+  idUser    String         @map("id_user")
+  idAssento String         @map("id_assento")
+  qrcode    String
+  status    IngressoStatus @default(VALIDO)
+  link      String
+  usadoEm   DateTime?      @map("usado_em")
+
+  pedido  Pedido  @relation(fields: [idPedido], references: [id])
+  usuario Usuario @relation(fields: [idUser], references: [id])
+  assento Assento @relation(fields: [idAssento], references: [id])
+
+  @@map("ingressos")
+}
+
+model Evento {
+  id                   String   @id @default(cuid())
+  idFilme              String   @map("id_filme")
+  idUserOrganizador    String   @map("id_user_organizador")
+  titulo               String
+  descricao            String
+  imgFilme             String   @map("img_filme")
+  local                String
+  data                 DateTime
+  preco                Decimal  @db.Decimal(10, 2)
+  capacidade           Int
+  ingressosDisponiveis Int      @map("ingressos_disponiveis")
+  criadoEm             DateTime @default(now()) @map("criado_em")
+
+  organizador Usuario @relation(fields: [idUserOrganizador], references: [id])
+
+  @@map("eventos")
 }
