@@ -1,20 +1,56 @@
 # ticketSells
 
-Pensei em uma aplicacao Monolitica **NestJS + React (Vite) + Prisma + PostgreSQL** com autenticação JWT, orquestrado por Docker Compose.
+Pensei em uma aplicacao Monolitica **NestJS + React (Vite) + Prisma + PostgreSQL** com autenticação JWT, orquestrado por Docker Compose. Pagamentos são **simulados** via fila **RabbitMQ** (sem cobrança real).
 
-## Quick start (Docker)
+## Quick start (dev)
+
+O Docker Compose sobe **Postgres + RabbitMQ**. API e frontend rodam no host (hot reload nativo).
 
 ```bash
 cp .env.example .env
-docker compose up --build
+npm run docker:up
+npm install
+npm install --prefix client
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev:api
+npm run dev:client
 ```
 
-Abra http://localhost:3000
-
-| Serviço  | URL / porta            |
+| Serviço  | URL / porta           |
 |----------|------------------------|
-| App      | http://localhost:3000  |
-| Postgres | localhost:5432         |
+| Frontend | http://localhost:5173 |
+| API      | http://localhost:3000 |
+| Postgres | localhost:5432        |
+| RabbitMQ | localhost:5672 (AMQP) |
+| RabbitMQ UI | http://localhost:15672 (guest/guest) |
+
+O `.env` de desenvolvimento usa `localhost` no `DATABASE_URL` e em `RABBITMQ_URL`.
+
+Build de produção (Nest serve o `client/dist`):
+
+```bash
+docker compose --profile prod up --build
+```
+
+Abra http://localhost:3000. O serviço `app` conecta em `postgres` e `rabbitmq` na rede Docker.
+
+### Pagamento simulado
+
+1. Cliente reserva assentos → `Pedido` com `pagamentoStatus: PENDENTE` (assentos ficam ocupados).
+2. No frontend, **Confirmar pagamento** ou **Recusar pagamento** publica na fila `pagamentos`.
+3. Consumer Nest processa a mensagem (delay simulado) e atualiza o pedido:
+   - Confirmar → `PAGO` (ingressos válidos em Meus ingressos).
+   - Recusar → `CANCELADO` + ingressos `CANCELADO` (assentos liberados).
+
+Endpoints (JWT):
+
+- `POST /pagamentos/:idPedido/confirmar`
+- `POST /pagamentos/:idPedido/recusar`
+- `GET /pagamentos/:idPedido` — status para polling
+
+Variáveis: `RABBITMQ_URL`, `RABBITMQ_QUEUE_PAGAMENTOS`.
 
 ### Auth API
 
@@ -31,49 +67,35 @@ Consultas públicas; o token fica só no servidor.
 - `GET /filmes/now-playing?page=` — em cartaz
 - `GET /filmes/:id` — detalhes (`idFilme`, `titulo`, `descricao`, `imgFilme`, …)
 
-## Desenvolvimento local
+### Eventos (organizador)
 
-1. Suba só o Postgres:
+Requer JWT e `isOrg`.
 
-```bash
-docker compose up postgres -d
-```
-
-2. Configure o `.env` apontando para o host:
-
-```env
-DATABASE_URL=postgresql://ticketsells:ticketsells@localhost:5432/ticketsells?schema=public
-JWT_SECRET=dev-secret-change-me
-JWT_EXPIRES_IN=1d
-PORT=3000
-TMDB_ACCESS_TOKEN=
-```
+- `GET /eventos` — lista os eventos do organizador logado
+- `GET /eventos/:id` — detalhe (somente do organizador)
+- `POST /eventos` — cria evento (`idFilme`, `titulo`, `descricao`, `imgFilme`, `local`, `data`, `preco`, `capacidade`, `ingressosDisponiveis`)
 
 O token da TMDB é o **API Read Access Token** em [TMDB API settings](https://www.themoviedb.org/settings/api).
 
-3. Instale e rode:
+Usuários de seed (senha `senha123`):
 
-```bash
-npm install
-npm install --prefix client
-npm run db:generate
-npm run db:migrate
-npm run dev:api
-npm run dev:client
-```
-
-- API: http://localhost:3000  
-- Vite (proxy `/auth` e `/filmes`): http://localhost:5173  
+| Papel | Email |
+|-------|--------|
+| Organizador | `org@ticketsells.local` |
+| Cliente | `cliente@ticketsells.local` |
+| Portaria | `portaria@ticketsells.local` |
 
 ## Scripts
 
 | Script | Descrição |
 |--------|-----------|
-| `npm run docker:up` | Build e sobe app + postgres |
+| `npm run docker:up` | Sobe Postgres + RabbitMQ |
+| `npm run docker:prod` | Postgres + RabbitMQ + app de produção |
 | `npm run docker:down` | Para os serviços |
 | `npm run dev:api` | NestJS em watch |
 | `npm run dev:client` | Vite dev server |
 | `npm run db:migrate` | Prisma migrate (dev) |
+| `npm run db:seed` | Usuários organizador, cliente e portaria |
 | `npm run db:generate` | Gera Prisma Client |
 | `npm run build` | Build do client + API |
 
@@ -84,4 +106,4 @@ https://excalidraw.com/#json=qXnO6eGhA7YnTsz1KGTJY,Cd0ROHONRHCULO0jqy0Y2A
 
 --Revisei a modelagem várias vezes e, quando havia trade-off, escolhi performance. Por isso há flags booleanas e alguma duplicidade (como idUser em mais de uma tabela): menos joins, consultas mais simples e um desenho mais fácil de escalar--
 
-Boa parte dos DTOs repassei para IA realizar e agi como um revisor e modificava quando necessário.
+Boa parte dos DTOs repassei para IA realizar e agi como um revisor, intervindo quando necessário.

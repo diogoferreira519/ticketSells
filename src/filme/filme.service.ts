@@ -17,6 +17,14 @@ export class FilmeService {
     return this.tmdb.nowPlayingMovies(page ?? 1);
   }
 
+  genres() {
+    return this.tmdb.movieGenres();
+  }
+
+  discoverByGenre(genreId: number, page?: number) {
+    return this.tmdb.discoverByGenre(genreId, page ?? 1);
+  }
+
   findById(id: string) {
     return this.tmdb.movieDetails(id);
   }

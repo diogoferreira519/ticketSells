@@ -1,10 +1,52 @@
-import { useEffect, useState } from 'react';
-import { meRequest, type User } from '../api';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import {
+  listCatalogoEventosRequest,
+  meRequest,
+  type CatalogoEvento,
+  type User,
+} from '../api';
 import { useAuth } from '../auth';
+import TopRightActions from '../components/TopRightActions';
+
+function formatSessao(value: string) {
+  return new Date(value).toLocaleString('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+}
+
+type FilmeGrupo = {
+  idFilme: string;
+  titulo: string;
+  descricao: string;
+  imgFilme: string;
+  sessoes: CatalogoEvento[];
+};
+
+function agruparPorFilme(eventos: CatalogoEvento[]): FilmeGrupo[] {
+  const mapa = new Map<string, FilmeGrupo>();
+  for (const evento of eventos) {
+    const existente = mapa.get(evento.idFilme);
+    if (existente) {
+      existente.sessoes.push(evento);
+      continue;
+    }
+    mapa.set(evento.idFilme, {
+      idFilme: evento.idFilme,
+      titulo: evento.titulo,
+      descricao: evento.descricao,
+      imgFilme: evento.imgFilme,
+      sessoes: [evento],
+    });
+  }
+  return Array.from(mapa.values());
+}
 
 export default function HomePage() {
   const { token, logout } = useAuth();
   const [user, setUser] = useState<User | null>(null);
+  const [eventos, setEventos] = useState<CatalogoEvento[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,7 +55,18 @@ export default function HomePage() {
     let cancelled = false;
     meRequest(token)
       .then((data) => {
-        if (!cancelled) setUser(data);
+        if (cancelled) return Promise.resolve();
+        setUser(data);
+        if (data.isOrg) return Promise.resolve();
+        return listCatalogoEventosRequest(token)
+          .then((lista) => {
+            if (!cancelled) setEventos(lista);
+          })
+          .catch((err: unknown) => {
+            if (!cancelled) {
+              setError(err instanceof Error ? err.message : 'Falha ao carregar sessões');
+            }
+          });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -27,28 +80,63 @@ export default function HomePage() {
     };
   }, [token, logout]);
 
+  const filmes = useMemo(() => agruparPorFilme(eventos), [eventos]);
+
+  if (user?.isOrg) {
+    return <Navigate to="/organizador/eventos" replace />;
+  }
+
   return (
-    <div className="grid min-h-screen place-items-center bg-[radial-gradient(ellipse_at_top,_rgba(220,38,38,0.4),_transparent_55%),linear-gradient(165deg,#000000_0%,#1a0505_40%,#450a0a_75%,#000000_100%)] p-6 font-sans text-white">
-      <div className="grid w-full max-w-md gap-4 rounded-2xl border border-red-500/30 bg-gradient-to-b from-zinc-950/90 to-black/90 p-8 text-center shadow-[0_0_60px_-20px_rgba(220,38,38,0.55)] backdrop-blur-md">
-        <p className="m-0 text-sm font-bold uppercase tracking-[0.12em] text-red-500">
-          ticketSells
-        </p>
-        <h1 className="m-0 text-3xl font-semibold leading-tight">Área autenticada</h1>
-        {error ? <p className="m-0 text-sm text-red-400">{error}</p> : null}
-        {user ? (
-          <p className="m-0 text-zinc-400">
-            Logado como <strong className="text-white">{user.email}</strong>
+    <div className="bg-page min-h-screen p-6 pt-20 font-sans text-fg">
+      <TopRightActions />
+      <div className="mx-auto grid w-full max-w-5xl gap-6">
+        <header>
+          <p className="m-0 text-sm font-bold uppercase tracking-[0.12em] text-red-500">
+            ticketSells
           </p>
+          <h1 className="m-0 text-3xl font-semibold">Em cartaz</h1>
+          <p className="m-0 mt-1 text-sm text-muted">
+            Sessões a partir de hoje. Escolha um horário para reservar seu lugar.
+          </p>
+        </header>
+
+        {error ? <p className="m-0 text-sm text-red-500">{error}</p> : null}
+
+        {!user ? (
+          <p className="m-0 text-muted">Carregando…</p>
+        ) : filmes.length === 0 ? (
+          <div className="rounded-2xl border bg-surface p-8 text-center">
+            <p className="m-0 text-muted">Nenhuma sessão disponível no momento.</p>
+          </div>
         ) : (
-          <p className="m-0 text-zinc-400">Carregando…</p>
+          <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+            {filmes.map((filme) => (
+              <li key={filme.idFilme} className="overflow-hidden rounded-2xl border bg-surface">
+                {filme.imgFilme ? (
+                  <img alt="" className="h-48 w-full object-cover" src={filme.imgFilme} />
+                ) : (
+                  <div className="poster-empty grid h-48 place-items-center">Sem imagem</div>
+                )}
+                <div className="grid gap-2 p-4">
+                  <h2 className="m-0 text-lg font-semibold">{filme.titulo}</h2>
+                  <p className="m-0 line-clamp-2 text-sm text-muted">{filme.descricao}</p>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {filme.sessoes.map((sessao) => (
+                      <Link
+                        key={sessao.id}
+                        className="btn-ghost px-3 py-1.5 text-sm no-underline"
+                        to={`/eventos/${sessao.id}`}
+                      >
+                        {formatSessao(sessao.data)}
+                        {sessao.vagas === 0 ? ' · esgotado' : ''}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
-        <button
-          className="mt-1 cursor-pointer rounded-lg border-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 px-4 py-3 font-bold text-white transition hover:from-red-600 hover:via-red-500 hover:to-red-400"
-          type="button"
-          onClick={logout}
-        >
-          Sair
-        </button>
       </div>
     </div>
   );

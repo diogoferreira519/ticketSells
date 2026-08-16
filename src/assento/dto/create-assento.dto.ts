@@ -1,13 +1,9 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateAssentoDto {
   @IsString()
-  idUser!: string;
+  idSala!: string;
 
   @IsString()
   descricao!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  disponivel?: boolean;
 }

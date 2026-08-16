@@ -8,11 +8,11 @@ export class UpdateIngressoDto {
 
   @IsOptional()
   @IsString()
-  idUser?: string;
+  idAssento?: string;
 
   @IsOptional()
   @IsString()
-  idAssento?: string;
+  idEvento?: string;
 
   @IsOptional()
   @IsString()

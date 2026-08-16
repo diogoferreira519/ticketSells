@@ -2,12 +2,17 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginRequest } from '../api';
 import { useAuth } from '../auth';
+import catalogoFilmes from '../assets/catalogofilmes.jpg';
+import ThemeToggle from '../components/ThemeToggle';
+import { useToast } from '../toast';
 
 export default function LoginPage() {
   const { setToken } = useAuth();
+  const { showSuccess } = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +23,7 @@ export default function LoginPage() {
     try {
       const data = await loginRequest(email, password);
       setToken(data.access_token);
+      showSuccess('Login realizado');
       navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -27,21 +33,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[radial-gradient(ellipse_at_top,_rgba(220,38,38,0.4),_transparent_55%),linear-gradient(165deg,#000000_0%,#1a0505_40%,#450a0a_75%,#000000_100%)] p-6 font-sans text-white">
+    <div className="relative grid min-h-screen place-items-center overflow-hidden p-6 font-sans text-fg">
+      <img
+        alt=""
+        src={catalogoFilmes}
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-40"
+      />
+      <div className="bg-page-overlay pointer-events-none absolute inset-0 z-[1]" />
+      <div className="fixed right-6 top-6 z-20">
+        <ThemeToggle />
+      </div>
       <form
-        className="grid w-full max-w-md gap-4 rounded-2xl border border-red-500/30 bg-gradient-to-b from-zinc-950/90 to-black/90 p-8 shadow-[0_0_60px_-20px_rgba(220,38,38,0.55)] backdrop-blur-md"
+        className="relative z-10 grid w-full max-w-md gap-3 rounded-2xl border bg-surface p-8 shadow-[0_0_60px_-20px_rgba(220,38,38,0.55)] backdrop-blur-md"
         onSubmit={onSubmit}
       >
-        <p className="m-0 text-sm font-bold uppercase tracking-[0.12em] text-red-500">
+        <p className="m-0 text-center text-2xl font-bold uppercase tracking-[0.12em] text-red-500">
           ticketSells
         </p>
-        <h1 className="m-0 text-3xl font-semibold leading-tight">Entrar</h1>
-        <p className="m-0 text-zinc-400">Acesse sua conta para continuar</p>
+        <h1 className="m-0 text-xl font-semibold leading-tight">Entrar</h1>
+        <p className="m-0 text-muted">Acesse sua conta para continuar</p>
 
-        <label className="grid gap-1.5 text-sm text-zinc-300">
+        <label className="grid gap-1.5 text-sm text-muted">
           Email
           <input
-            className="w-full rounded-lg border border-red-900/60 bg-black/70 px-3.5 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-500 focus:ring-2 focus:ring-red-500/40"
+            className="input-field"
             type="email"
             autoComplete="email"
             value={email}
@@ -50,32 +65,49 @@ export default function LoginPage() {
           />
         </label>
 
-        <label className="grid gap-1.5 text-sm text-zinc-300">
+        <label className="grid gap-1.5 text-sm text-muted">
           Senha
-          <input
-            className="w-full rounded-lg border border-red-900/60 bg-black/70 px-3.5 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-500 focus:ring-2 focus:ring-red-500/40"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={6}
-            required
-          />
+          <div className="relative">
+            <input
+              className="input-field pr-12"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-md border-0 bg-transparent p-1.5 text-muted hover:text-fg"
+              type="button"
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              onClick={() => setShowPassword((value) => !value)}
+            >
+              {showPassword ? (
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3l18 18" />
+                  <path d="M10.6 10.6a2 2 0 102.8 2.8" />
+                  <path d="M9.9 5.1A10.9 10.9 0 0121 12c-.7 1.2-1.6 2.3-2.7 3.2M6.1 6.1C4.4 7.4 3 9.1 2 12c1.8 5 6.5 8 10 8 1.5 0 3-.4 4.4-1.1" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
         </label>
 
-        {error ? <p className="m-0 text-sm text-red-400">{error}</p> : null}
+        {error ? <p className="m-0 text-sm text-red-500">{error}</p> : null}
 
-        <button
-          className="mt-1 cursor-pointer rounded-lg border-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 px-4 py-3 font-bold text-white transition hover:from-red-600 hover:via-red-500 hover:to-red-400 disabled:cursor-wait disabled:opacity-70"
-          type="submit"
-          disabled={loading}
-        >
+        <button className="btn-primary mt-1" type="submit" disabled={loading}>
           {loading ? 'Entrando…' : 'Entrar'}
         </button>
 
-        <p className="m-0 text-center text-sm text-zinc-400">
+        <p className="m-0 text-center text-sm text-muted">
           Não tem conta?{' '}
-          <Link className="font-medium text-red-400 hover:text-red-300 hover:underline" to="/register">
+          <Link className="font-medium text-red-500 hover:text-red-400 hover:underline" to="/register">
             Criar conta
           </Link>
         </p>

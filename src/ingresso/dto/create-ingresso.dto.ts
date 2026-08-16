@@ -6,10 +6,10 @@ export class CreateIngressoDto {
   idPedido!: string;
 
   @IsString()
-  idUser!: string;
+  idAssento!: string;
 
   @IsString()
-  idAssento!: string;
+  idEvento!: string;
 
   @IsString()
   qrcode!: string;

@@ -14,7 +14,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "docker:up": "docker compose up --build",
+    "db:seed": "prisma db seed",
+    "docker:up": "docker compose up postgres rabbitmq -d",
+    "docker:prod": "docker compose --profile prod up --build",
     "docker:down": "docker compose down"
   },
   "dependencies": {
@@ -26,6 +28,8 @@
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/serve-static": "^4.0.2",
     "@prisma/client": "^6.3.1",
+    "amqp-connection-manager": "^5.0.0",
+    "amqplib": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -38,10 +42,14 @@
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
+    "@types/amqplib": "^0.10.8",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

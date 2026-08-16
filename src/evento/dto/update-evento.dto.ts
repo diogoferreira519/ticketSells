@@ -1,4 +1,5 @@
-import { IsDateString, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdateEventoDto {
   @IsOptional()
@@ -7,7 +8,7 @@ export class UpdateEventoDto {
 
   @IsOptional()
   @IsString()
-  idUserOrganizador?: string;
+  idSala?: string;
 
   @IsOptional()
   @IsString()
@@ -22,25 +23,12 @@ export class UpdateEventoDto {
   imgFilme?: string;
 
   @IsOptional()
-  @IsString()
-  local?: string;
-
-  @IsOptional()
   @IsDateString()
   data?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   preco?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  capacidade?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  ingressosDisponiveis?: number;
 }

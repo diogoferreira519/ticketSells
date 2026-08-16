@@ -19,20 +19,36 @@ services:
       timeout: 5s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
+    profiles: ["prod"]
     build: .
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://ticketsells:ticketsells@postgres:5432/ticketsells?schema=public}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketsells}:${POSTGRES_PASSWORD:-ticketsells}@postgres:5432/${POSTGRES_DB:-ticketsells}?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
       PORT: 3000
       TMDB_ACCESS_TOKEN: ${TMDB_ACCESS_TOKEN}
       TMDB_BASE_URL: ${TMDB_BASE_URL:-https://api.themoviedb.org/3}
       TMDB_IMAGE_BASE: ${TMDB_IMAGE_BASE:-https://image.tmdb.org/t/p/w500}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_QUEUE_PAGAMENTOS: ${RABBITMQ_QUEUE_PAGAMENTOS:-pagamentos}
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
 volumes:

@@ -1,11 +1,12 @@
-import { IsDateString, IsInt, IsNumber, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsNumber, IsString, Min } from 'class-validator';
 
 export class CreateEventoDto {
   @IsString()
   idFilme!: string;
 
   @IsString()
-  idUserOrganizador!: string;
+  idSala!: string;
 
   @IsString()
   titulo!: string;
@@ -16,21 +17,11 @@ export class CreateEventoDto {
   @IsString()
   imgFilme!: string;
 
-  @IsString()
-  local!: string;
-
   @IsDateString()
   data!: string;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   preco!: number;
-
-  @IsInt()
-  @Min(0)
-  capacidade!: number;
-
-  @IsInt()
-  @Min(0)
-  ingressosDisponiveis!: number;
 }

@@ -29,12 +29,24 @@ model Usuario {
   isCliente  Boolean @default(true) @map("is_cliente")
   isPortaria Boolean @default(false) @map("is_portaria")
 
-  pedidos   Pedido[]
-  assentos  Assento[]
-  ingressos Ingresso[]
-  eventos   Evento[]
+  pedidos Pedido[]
+  eventos Evento[]
+  salas   Sala[]
 
   @@map("usuarios")
+}
+
+model Sala {
+  id                String @id @default(cuid())
+  idUserOrganizador String @map("id_user_organizador")
+  capacidade        Int
+  descricao         String
+
+  organizador Usuario   @relation(fields: [idUserOrganizador], references: [id])
+  eventos     Evento[]
+  assentos    Assento[]
+
+  @@map("salas")
 }
 
 model Pedido {
@@ -51,12 +63,13 @@ model Pedido {
 }
 
 model Assento {
-  id         String  @id @default(cuid())
-  idUser     String  @map("id_user")
-  descricao  String
-  disponivel Boolean @default(true)
+  id        String @id @default(cuid())
+  idSala    String @map("id_sala")
+  descricao String
+  fila      Int
+  coluna    Int
 
-  usuario   Usuario    @relation(fields: [idUser], references: [id])
+  sala      Sala       @relation(fields: [idSala], references: [id])
   ingressos Ingresso[]
 
   @@map("assentos")
@@ -65,35 +78,36 @@ model Assento {
 model Ingresso {
   id        String         @id @default(cuid())
   idPedido  String         @map("id_pedido")
-  idUser    String         @map("id_user")
   idAssento String         @map("id_assento")
-  qrcode    String
+  idEvento  String         @map("id_evento")
+  qrcode    String         @unique
   status    IngressoStatus @default(VALIDO)
   link      String
   usadoEm   DateTime?      @map("usado_em")
 
   pedido  Pedido  @relation(fields: [idPedido], references: [id])
-  usuario Usuario @relation(fields: [idUser], references: [id])
   assento Assento @relation(fields: [idAssento], references: [id])
+  evento  Evento  @relation(fields: [idEvento], references: [id])
 
+  @@unique([idEvento, idAssento])
   @@map("ingressos")
 }
 
 model Evento {
-  id                   String   @id @default(cuid())
-  idFilme              String   @map("id_filme")
-  idUserOrganizador    String   @map("id_user_organizador")
-  titulo               String
-  descricao            String
-  imgFilme             String   @map("img_filme")
-  local                String
-  data                 DateTime
-  preco                Decimal  @db.Decimal(10, 2)
-  capacidade           Int
-  ingressosDisponiveis Int      @map("ingressos_disponiveis")
-  criadoEm             DateTime @default(now()) @map("criado_em")
+  id                String   @id @default(cuid())
+  idFilme           String   @map("id_filme")
+  idUserOrganizador String   @map("id_user_organizador")
+  idSala            String   @map("id_sala")
+  titulo            String
+  descricao         String
+  imgFilme          String   @map("img_filme")
+  data              DateTime
+  preco             Decimal  @db.Decimal(10, 2)
+  criadoEm          DateTime @default(now()) @map("criado_em")
 
-  organizador Usuario @relation(fields: [idUserOrganizador], references: [id])
+  organizador Usuario    @relation(fields: [idUserOrganizador], references: [id])
+  sala        Sala       @relation(fields: [idSala], references: [id])
+  ingressos   Ingresso[]
 
   @@map("eventos")
 }

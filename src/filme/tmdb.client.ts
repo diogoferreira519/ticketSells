@@ -21,10 +21,25 @@ type TmdbPagedResponse = {
   results: TmdbMovieListItem[];
 };
 
+type TmdbGenre = {
+  id: number;
+  name: string;
+};
+
 type TmdbMovieDetails = TmdbMovieListItem & {
   original_title: string;
   runtime: number | null;
   vote_average: number;
+  genres: TmdbGenre[];
+};
+
+type TmdbGenreListResponse = {
+  genres: TmdbGenre[];
+};
+
+export type FilmeGenero = {
+  id: number;
+  nome: string;
 };
 
 export type FilmeResumo = {
@@ -39,6 +54,7 @@ export type FilmeDetalhe = FilmeResumo & {
   tituloOriginal: string;
   duracaoMinutos: number | null;
   notaMedia: number;
+  generos: string[];
 };
 
 export type FilmeLista = {
@@ -82,6 +98,30 @@ export class TmdbClient {
     return this.mapLista(data);
   }
 
+  async movieGenres(): Promise<FilmeGenero[]> {
+    const params = new URLSearchParams({ language: 'pt-BR' });
+    const data = await this.get<TmdbGenreListResponse>(
+      `/genre/movie/list?${params}`,
+    );
+    return data.genres.map((genre) => ({
+      id: genre.id,
+      nome: genre.name,
+    }));
+  }
+
+  async discoverByGenre(genreId: number, page = 1): Promise<FilmeLista> {
+    const params = new URLSearchParams({
+      with_genres: String(genreId),
+      page: String(page),
+      language: 'pt-BR',
+      sort_by: 'popularity.desc',
+    });
+    const data = await this.get<TmdbPagedResponse>(
+      `/discover/movie?${params}`,
+    );
+    return this.mapLista(data);
+  }
+
   async movieDetails(id: string): Promise<FilmeDetalhe> {
     const params = new URLSearchParams({ language: 'pt-BR' });
     const data = await this.get<TmdbMovieDetails>(`/movie/${id}?${params}`);
@@ -90,6 +130,7 @@ export class TmdbClient {
       tituloOriginal: data.original_title,
       duracaoMinutos: data.runtime,
       notaMedia: data.vote_average,
+      generos: (data.genres ?? []).map((genre) => genre.name),
     };
   }
 
