@@ -312,7 +312,15 @@ export default function EventoReservaPage() {
                       </p>
                     </div>
                   )}
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex flex-wrap justify-end gap-2">
+                    <button
+                      className="btn-ghost px-5 py-2.5 text-sm"
+                      type="button"
+                      disabled={selecionados.length === 0 || reservando}
+                      onClick={() => setSelecionados([])}
+                    >
+                      Desselecionar
+                    </button>
                     <button
                       className="btn-primary px-5 py-2.5 text-sm"
                       type="button"

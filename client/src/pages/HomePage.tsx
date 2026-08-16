@@ -110,7 +110,9 @@ export default function HomePage() {
           </div>
         ) : (
           <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {filmes.map((filme) => (
+            {filmes.map((filme) => {
+              const sessaoComprar = filme.sessoes.find((s) => s.vagas > 0);
+              return (
               <li key={filme.idFilme} className="overflow-hidden rounded-2xl border bg-surface">
                 {filme.imgFilme ? (
                   <img alt="" className="h-48 w-full object-cover" src={filme.imgFilme} />
@@ -132,9 +134,19 @@ export default function HomePage() {
                       </Link>
                     ))}
                   </div>
+                  {sessaoComprar ? (
+                    <Link className="btn-buy mt-2" to={`/eventos/${sessaoComprar.id}`}>
+                      Comprar
+                    </Link>
+                  ) : (
+                    <button className="btn-buy mt-2" type="button" disabled>
+                      Esgotado
+                    </button>
+                  )}
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>

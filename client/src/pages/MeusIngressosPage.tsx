@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { listMeusIngressosRequest, type MeuIngresso } from '../api';
+import {
+  listMeusIngressosRequest,
+  meRequest,
+  type MeuIngresso,
+  type User,
+} from '../api';
 import { useAuth } from '../auth';
 import TopRightActions from '../components/TopRightActions';
 import { useToast } from '../toast';
@@ -21,6 +26,7 @@ function shareUrl(link: string) {
 export default function MeusIngressosPage() {
   const { token, logout } = useAuth();
   const { showSuccess } = useToast();
+  const [user, setUser] = useState<User | null>(null);
   const [ingressos, setIngressos] = useState<MeuIngresso[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,13 +35,32 @@ export default function MeusIngressosPage() {
     if (!token) return;
     let cancelled = false;
     setLoading(true);
-    listMeusIngressosRequest(token)
+    meRequest(token)
       .then((data) => {
-        if (!cancelled) setIngressos(data);
+        if (cancelled) return Promise.resolve();
+        setUser(data);
+        if (!data.isCliente) return Promise.resolve();
+        return listMeusIngressosRequest(token)
+          .then((lista) => {
+            if (!cancelled) setIngressos(lista);
+          })
+          .catch((err: unknown) => {
+            if (!cancelled) {
+              setError(
+                err instanceof Error ? err.message : 'Falha ao carregar ingressos',
+              );
+              if (
+                err instanceof Error &&
+                err.message.toLowerCase().includes('unauthorized')
+              ) {
+                logout();
+              }
+            }
+          });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Falha ao carregar ingressos');
+          setError(err instanceof Error ? err.message : 'Falha ao carregar usuário');
           if (
             err instanceof Error &&
             err.message.toLowerCase().includes('unauthorized')
@@ -62,6 +87,12 @@ export default function MeusIngressosPage() {
     }
   }
 
+  if (user && !user.isCliente) {
+    return (
+      <Navigate to={user.isOrg ? '/organizador/eventos' : '/'} replace />
+    );
+  }
+
   return (
     <div className="bg-page min-h-screen p-6 pt-20 font-sans text-fg">
       <TopRightActions />
@@ -83,7 +114,7 @@ export default function MeusIngressosPage() {
 
         {error ? <p className="m-0 text-sm text-red-500">{error}</p> : null}
 
-        {loading ? (
+        {loading || !user ? (
           <p className="m-0 text-muted">Carregando…</p>
         ) : ingressos.length === 0 ? (
           <p className="m-0 text-muted">Você ainda não tem ingressos.</p>

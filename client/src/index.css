@@ -158,6 +158,10 @@
     color: var(--page-fg);
   }
 
+  .btn-buy {
+    @apply w-full cursor-pointer rounded-lg border-0 bg-emerald-600 px-4 py-2.5 text-center font-bold text-white no-underline transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .poster-empty {
     background: var(--poster-empty);
     color: var(--page-muted);
