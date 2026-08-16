@@ -14,6 +14,30 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/eventos': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/salas': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/catalogo': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/pagamentos': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/ingressos/meus': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/ingressos/por-codigo': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
   build: {

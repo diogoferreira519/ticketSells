@@ -1,3 +1,165 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root,
+  html.light {
+    --page-fg: #18181b;
+    --page-muted: #52525b;
+    --page-overlay: linear-gradient(
+      165deg,
+      rgba(255, 247, 247, 0.88) 0%,
+      rgba(253, 232, 232, 0.82) 40%,
+      rgba(254, 226, 226, 0.78) 75%,
+      rgba(255, 241, 242, 0.9) 100%
+    );
+    --page-overlay-solid: radial-gradient(ellipse at top, rgba(220, 38, 38, 0.18), transparent 55%),
+      linear-gradient(165deg, #fff7f7 0%, #fde8e8 40%, #fecaca 75%, #fff1f2 100%);
+    --surface-from: rgba(255, 255, 255, 0.92);
+    --surface-to: rgba(255, 241, 242, 0.95);
+    --surface-border: rgba(252, 165, 165, 0.7);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(252, 165, 165, 0.8);
+    --placeholder: #a1a1aa;
+    --poster-empty: #f4f4f5;
+  }
+
+  html.dark {
+    --page-fg: #ffffff;
+    --page-muted: #a1a1aa;
+    --page-overlay: radial-gradient(ellipse at top, rgba(220, 38, 38, 0.45), transparent 55%),
+      linear-gradient(
+        165deg,
+        rgba(0, 0, 0, 0.82) 0%,
+        rgba(26, 5, 5, 0.78) 40%,
+        rgba(69, 10, 10, 0.75) 75%,
+        rgba(0, 0, 0, 0.88) 100%
+      );
+    --page-overlay-solid: radial-gradient(ellipse at top, rgba(220, 38, 38, 0.4), transparent 55%),
+      linear-gradient(165deg, #000000 0%, #1a0505 40%, #450a0a 75%, #000000 100%);
+    --surface-from: rgba(9, 9, 11, 0.9);
+    --surface-to: rgba(0, 0, 0, 0.9);
+    --surface-border: rgba(239, 68, 68, 0.3);
+    --input-bg: rgba(0, 0, 0, 0.7);
+    --input-border: rgba(127, 29, 29, 0.6);
+    --placeholder: #52525b;
+    --poster-empty: #18181b;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-border) var(--poster-empty);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--poster-empty);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--surface-border);
+    border-radius: 999px;
+    border: 2px solid var(--poster-empty);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #ef4444;
+  }
+
+  input[type='date'],
+  input[type='time'] {
+    accent-color: #dc2626;
+    color-scheme: light;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 1;
+  }
+
+  html.dark input[type='date']::-webkit-calendar-picker-indicator,
+  html.dark input[type='time']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+
+  body {
+    @apply select-none;
+    color: var(--page-fg);
+    background: var(--page-overlay-solid);
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'] {
+    @apply select-text;
+  }
+}
+
+@layer components {
+  .bg-page {
+    background: var(--page-overlay-solid);
+  }
+
+  .bg-page-overlay {
+    background: var(--page-overlay);
+  }
+
+  .bg-surface {
+    background-image: linear-gradient(to bottom, var(--surface-from), var(--surface-to));
+    border-color: var(--surface-border);
+  }
+
+  .text-fg {
+    color: var(--page-fg);
+  }
+
+  .text-muted {
+    color: var(--page-muted);
+  }
+
+  .input-field {
+    @apply w-full rounded-lg px-3.5 py-3 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/40;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--page-fg);
+  }
+
+  .input-field::placeholder {
+    color: var(--placeholder);
+  }
+
+  .input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);
+  }
+
+  .btn-primary {
+    @apply cursor-pointer rounded-lg border-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 px-4 py-3 font-bold text-white transition hover:from-red-600 hover:via-red-500 hover:to-red-400 disabled:cursor-wait disabled:opacity-70;
+  }
+
+  .btn-ghost {
+    @apply cursor-pointer rounded-lg border px-4 py-2.5;
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--page-fg);
+  }
+
+  .poster-empty {
+    background: var(--poster-empty);
+    color: var(--page-muted);
+  }
+}
