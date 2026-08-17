@@ -2,39 +2,20 @@
 
 Aplicação monolítica **NestJS + React (Vite) + Prisma + PostgreSQL** com autenticação JWT, orquestrada por Docker Compose. Pagamentos são **simulados** via fila **RabbitMQ** (sem cobrança real).
 
-## Pré-requisitos
+**Pré-requisitos:** Node.js 20+, npm, Docker e Docker Compose.
 
-- Node.js 20+ e npm
-- Docker e Docker Compose
+## Como rodar (dev)
 
-## Configurar o ambiente
-
-Na raiz do repositório:
+1. Copie o `.env` e suba Postgres + RabbitMQ:
 
 ```bash
 cp .env.example .env
+npm run docker:up
 ```
 
-Variáveis principais no `.env`:
-
-| Variável | Uso |
-|----------|-----|
-| `DATABASE_URL` | Postgres (em dev: `localhost:5432`) |
-| `JWT_SECRET` / `JWT_EXPIRES_IN` | Auth JWT |
-| `RABBITMQ_URL` / `RABBITMQ_QUEUE_PAGAMENTOS` | Fila de pagamentos simulados |
-| `TMDB_ACCESS_TOKEN` | Busca de filmes (API Read Access Token da TMDB) |
-| `CORS_ORIGIN` | Origem do frontend em dev (`http://localhost:5173`) |
-| `PORT` | Porta da API (padrão `3000`) |
-
-O token da TMDB é o **API Read Access Token** em [TMDB API settings](https://www.themoviedb.org/settings/api).
-
-## Desenvolvimento
-
-O Docker Compose sobe **apenas Postgres + RabbitMQ**. API e frontend rodam no host (hot reload).
+2. Instale dependências, migre o banco e rode o **seed** (cria os usuários de teste):
 
 ```bash
-cp .env.example .env   # se ainda não tiver .env
-npm run docker:up
 npm install
 npm install --prefix client
 npm run db:generate
@@ -42,49 +23,36 @@ npm run db:migrate
 npm run db:seed
 ```
 
-Em **dois terminais** separados:
+3. Em **dois terminais**:
 
 ```bash
-npm run dev:api      # NestJS → http://localhost:3000
-npm run dev:client  # Vite → http://localhost:5173
+npm run dev:api      # http://localhost:3000
+npm run dev:client  # http://localhost:5173
 ```
 
-Abra o frontend em http://localhost:5173. O Vite faz proxy das rotas de API para a porta 3000.
+4. Abra http://localhost:5173 e faça login com um usuário do seed (senha **`senha123`**):
 
-| Serviço     | URL / porta                        |
-|-------------|------------------------------------|
-| Frontend    | http://localhost:5173              |
-| API         | http://localhost:3000              |
-| Postgres    | localhost:5432                     |
-| RabbitMQ    | localhost:5672 (AMQP)              |
+| Papel       | Email                       |
+|-------------|-----------------------------|
+| Organizador | `org@ticketsells.local`     |
+| Cliente     | `cliente@ticketsells.local` |
+| Portaria    | `portaria@ticketsells.local`|
+
+Para parar Postgres/RabbitMQ: `npm run docker:down`.
+
+| Serviço     | URL                            |
+|-------------|--------------------------------|
+| Frontend    | http://localhost:5173          |
+| API         | http://localhost:3000          |
 | RabbitMQ UI | http://localhost:15672 (guest/guest) |
-
-O `.env` de desenvolvimento usa `localhost` no `DATABASE_URL` e em `RABBITMQ_URL`.
-
-Para parar Postgres e RabbitMQ:
-
-```bash
-npm run docker:down
-```
 
 ## Produção local (Docker)
 
-Build da API + React; o Nest serve o `client/dist` na mesma porta. O entrypoint aplica `prisma migrate deploy` e sobe o app.
-
 ```bash
 npm run docker:prod
-# equivalente: docker compose --profile prod up --build
 ```
 
-Abra http://localhost:3000. O serviço `app` conecta em `postgres` e `rabbitmq` na rede Docker (as URLs internas já vêm do `docker-compose.yml`).
-
-Usuários de seed (senha `senha123`):
-
-| Papel        | Email                     |
-|--------------|---------------------------|
-| Organizador  | `org@ticketsells.local`   |
-| Cliente      | `cliente@ticketsells.local` |
-| Portaria     | `portaria@ticketsells.local` |
+Abra http://localhost:3000 (Nest serve o React). O entrypoint aplica as migrations. Rode o seed no host se ainda precisar dos usuários de teste: `npm run db:seed` (com `DATABASE_URL` apontando para o Postgres do Compose).
 
 ## Pagamento simulado
 
@@ -140,6 +108,8 @@ Requer JWT e `isOrg`.
 | `npm run db:seed` | Usuários organizador, cliente e portaria |
 | `npm run db:generate` | Gera Prisma Client |
 | `npm run build` | Build do client + API |
+| `npm test` | Testes unitários da API |
+| `npm run test:watch` | Testes unitários em watch |
 
 ## Meu processo no decorrer do projeto
 
@@ -149,3 +119,6 @@ https://excalidraw.com/#json=qXnO6eGhA7YnTsz1KGTJY,Cd0ROHONRHCULO0jqy0Y2A
 --Revisei a modelagem várias vezes e, quando havia trade-off, escolhi performance. Por isso há flags booleanas e alguma duplicidade (como idUser em mais de uma tabela): menos joins, consultas mais simples e um desenho mais fácil de escalar--
 
 Boa parte dos DTOs repassei para IA realizar e agi como um revisor, intervindo quando necessário.
+
+
+--Eu queria realizar o deploy mas sabia que com rabbitmq, banco e api mais complexa teria que arcar com um plano para hospedar então decidi deixar a aplicacao local apenas

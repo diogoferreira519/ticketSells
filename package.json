@@ -17,7 +17,9 @@
     "db:seed": "prisma db seed",
     "docker:up": "docker compose up postgres rabbitmq -d",
     "docker:prod": "docker compose --profile prod up --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
@@ -42,10 +44,14 @@
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
+    "@nestjs/testing": "^10.4.22",
     "@types/amqplib": "^0.10.8",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
