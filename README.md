@@ -114,7 +114,7 @@ Requer JWT e `isOrg`.
 ## Meu processo no decorrer do projeto
 
 O desenvolvimento começou pela modelagem de dados. Antes de implementar qualquer código, mapeei as entidades, atributos e relacionamentos do sistema. Utilizei o Excalidraw para desenhar o diagrama conceitual e visualizar com clareza a estrutura final do banco de dados:
-[https://excalidraw.com/#json=qXnO6eGhA7YnTsz1KGTJY,Cd0ROHONRHCULO0jqy0Y2A](https://excalidraw.com/#json=ERdz9JrGgnKjNRoVq91gh,RyyeuU3CCYHYbOZ5UHyY9w)
+https://excalidraw.com/#json=JcEPI1t2Pmsr8b3CnTsMk,GjKAuSFw2WNAqvhWQrVfUw
 
 --Revisei a modelagem várias vezes e, quando havia trade-off, escolhi performance. Por isso há flags booleanas e alguma duplicidade (como idUser em mais de uma tabela): menos joins, consultas mais simples e um desenho mais fácil de escalar--
 
