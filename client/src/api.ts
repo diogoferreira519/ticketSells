@@ -7,6 +7,12 @@ export type User = {
   isPortaria: boolean;
 };
 
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+
+function apiUrl(path: string) {
+  return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 async function parseError(res: Response): Promise<string> {
   try {
     const data = (await res.json()) as { message?: string | string[] };
@@ -20,7 +26,7 @@ async function parseError(res: Response): Promise<string> {
 }
 
 export async function loginRequest(email: string, password: string) {
-  const res = await fetch('/auth/login', {
+  const res = await fetch(apiUrl('/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -34,7 +40,7 @@ export async function loginRequest(email: string, password: string) {
 }
 
 export async function registerRequest(nome: string, email: string, password: string) {
-  const res = await fetch('/auth/register', {
+  const res = await fetch(apiUrl('/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ nome, email, password }),
@@ -51,7 +57,7 @@ export async function registerRequest(nome: string, email: string, password: str
 }
 
 export async function meRequest(token: string) {
-  const res = await fetch('/auth/me', {
+  const res = await fetch(apiUrl('/auth/me'), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -224,7 +230,7 @@ function authHeaders(token: string) {
 }
 
 export async function filmesPopularRequest(page = 1) {
-  const res = await fetch(`/filmes/popular?page=${page}`);
+  const res = await fetch(apiUrl(`/filmes/popular?page=${page}`));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -232,7 +238,7 @@ export async function filmesPopularRequest(page = 1) {
 }
 
 export async function filmesNowPlayingRequest(page = 1) {
-  const res = await fetch(`/filmes/now-playing?page=${page}`);
+  const res = await fetch(apiUrl(`/filmes/now-playing?page=${page}`));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -241,7 +247,7 @@ export async function filmesNowPlayingRequest(page = 1) {
 
 export async function filmesSearchRequest(query: string, page = 1) {
   const params = new URLSearchParams({ query, page: String(page) });
-  const res = await fetch(`/filmes/search?${params}`);
+  const res = await fetch(apiUrl(`/filmes/search?${params}`));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -249,7 +255,7 @@ export async function filmesSearchRequest(query: string, page = 1) {
 }
 
 export async function filmesGenerosRequest() {
-  const res = await fetch('/filmes/generos');
+  const res = await fetch(apiUrl('/filmes/generos'));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -257,7 +263,7 @@ export async function filmesGenerosRequest() {
 }
 
 export async function filmeByIdRequest(id: string) {
-  const res = await fetch(`/filmes/${encodeURIComponent(id)}`);
+  const res = await fetch(apiUrl(`/filmes/${encodeURIComponent(id)}`));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -269,7 +275,7 @@ export async function filmesDiscoverRequest(genreId: number, page = 1) {
     genreId: String(genreId),
     page: String(page),
   });
-  const res = await fetch(`/filmes/discover?${params}`);
+  const res = await fetch(apiUrl(`/filmes/discover?${params}`));
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
@@ -277,7 +283,7 @@ export async function filmesDiscoverRequest(genreId: number, page = 1) {
 }
 
 export async function listEventosRequest(token: string) {
-  const res = await fetch('/eventos', {
+  const res = await fetch(apiUrl('/eventos'), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -290,7 +296,7 @@ export async function createEventoRequest(
   token: string,
   payload: CreateEventoPayload,
 ) {
-  const res = await fetch('/eventos', {
+  const res = await fetch(apiUrl('/eventos'), {
     method: 'POST',
     headers: {
       ...authHeaders(token),
@@ -305,7 +311,7 @@ export async function createEventoRequest(
 }
 
 export async function getEventoRequest(token: string, id: string) {
-  const res = await fetch(`/eventos/${encodeURIComponent(id)}`, {
+  const res = await fetch(apiUrl(`/eventos/${encodeURIComponent(id)}`), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -319,7 +325,7 @@ export async function updateEventoRequest(
   id: string,
   payload: CreateEventoPayload,
 ) {
-  const res = await fetch(`/eventos/${encodeURIComponent(id)}`, {
+  const res = await fetch(apiUrl(`/eventos/${encodeURIComponent(id)}`), {
     method: 'PATCH',
     headers: {
       ...authHeaders(token),
@@ -334,7 +340,7 @@ export async function updateEventoRequest(
 }
 
 export async function deleteEventoRequest(token: string, id: string) {
-  const res = await fetch(`/eventos/${encodeURIComponent(id)}`, {
+  const res = await fetch(apiUrl(`/eventos/${encodeURIComponent(id)}`), {
     method: 'DELETE',
     headers: authHeaders(token),
   });
@@ -344,7 +350,7 @@ export async function deleteEventoRequest(token: string, id: string) {
 }
 
 export async function listSalasRequest(token: string) {
-  const res = await fetch('/salas', {
+  const res = await fetch(apiUrl('/salas'), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -354,7 +360,7 @@ export async function listSalasRequest(token: string) {
 }
 
 export async function createSalaRequest(token: string, payload: CreateSalaPayload) {
-  const res = await fetch('/salas', {
+  const res = await fetch(apiUrl('/salas'), {
     method: 'POST',
     headers: {
       ...authHeaders(token),
@@ -369,7 +375,7 @@ export async function createSalaRequest(token: string, payload: CreateSalaPayloa
 }
 
 export async function listCatalogoEventosRequest(token: string) {
-  const res = await fetch('/catalogo/eventos', {
+  const res = await fetch(apiUrl('/catalogo/eventos'), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -379,7 +385,7 @@ export async function listCatalogoEventosRequest(token: string) {
 }
 
 export async function getCatalogoEventoRequest(token: string, id: string) {
-  const res = await fetch(`/catalogo/eventos/${encodeURIComponent(id)}`, {
+  const res = await fetch(apiUrl(`/catalogo/eventos/${encodeURIComponent(id)}`), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -393,8 +399,7 @@ export async function reservarAssentoRequest(
   idEvento: string,
   idAssentos: string[],
 ) {
-  const res = await fetch(
-    `/catalogo/eventos/${encodeURIComponent(idEvento)}/reservar`,
+  const res = await fetch(apiUrl(`/catalogo/eventos/${encodeURIComponent(idEvento)}/reservar`),
     {
       method: 'POST',
       headers: {
@@ -414,8 +419,7 @@ export async function confirmarPagamentoRequest(
   token: string,
   idPedido: string,
 ) {
-  const res = await fetch(
-    `/pagamentos/${encodeURIComponent(idPedido)}/confirmar`,
+  const res = await fetch(apiUrl(`/pagamentos/${encodeURIComponent(idPedido)}/confirmar`),
     {
       method: 'POST',
       headers: authHeaders(token),
@@ -428,8 +432,7 @@ export async function confirmarPagamentoRequest(
 }
 
 export async function recusarPagamentoRequest(token: string, idPedido: string) {
-  const res = await fetch(
-    `/pagamentos/${encodeURIComponent(idPedido)}/recusar`,
+  const res = await fetch(apiUrl(`/pagamentos/${encodeURIComponent(idPedido)}/recusar`),
     {
       method: 'POST',
       headers: authHeaders(token),
@@ -445,7 +448,7 @@ export async function getPagamentoStatusRequest(
   token: string,
   idPedido: string,
 ) {
-  const res = await fetch(`/pagamentos/${encodeURIComponent(idPedido)}`, {
+  const res = await fetch(apiUrl(`/pagamentos/${encodeURIComponent(idPedido)}`), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -474,7 +477,7 @@ export async function pollPagamentoStatus(
 }
 
 export async function listMeusIngressosRequest(token: string) {
-  const res = await fetch('/ingressos/meus', {
+  const res = await fetch(apiUrl('/ingressos/meus'), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -485,7 +488,7 @@ export async function listMeusIngressosRequest(token: string) {
 
 export async function getIngressoPorCodigoRequest(qrcode: string) {
   const res = await fetch(
-    `/ingressos/por-codigo/${encodeURIComponent(qrcode)}`,
+    apiUrl(`/ingressos/por-codigo/${encodeURIComponent(qrcode)}`),
   );
   if (!res.ok) {
     throw new Error(await parseError(res));
@@ -497,7 +500,7 @@ export async function validarIngressoRequest(
   token: string,
   payload: { qrcode: string; idEvento: string },
 ) {
-  const res = await fetch('/ingressos/validar', {
+  const res = await fetch(apiUrl('/ingressos/validar'), {
     method: 'POST',
     headers: {
       ...authHeaders(token),
