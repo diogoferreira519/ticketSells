@@ -118,7 +118,7 @@ https://excalidraw.com/#json=qXnO6eGhA7YnTsz1KGTJY,Cd0ROHONRHCULO0jqy0Y2A
 
 --Revisei a modelagem várias vezes e, quando havia trade-off, escolhi performance. Por isso há flags booleanas e alguma duplicidade (como idUser em mais de uma tabela): menos joins, consultas mais simples e um desenho mais fácil de escalar--
 
-Boa parte dos DTOs repassei para IA realizar e agi como um revisor, intervindo quando necessário.
+Boa parte dos DTOs, services e controllers (código mais boilerplate) repassei para IA realizar e agi como um revisor, intervindo quando necessário. Decidi fazer uma aplicacao de arquitetura monolitica pela facilidade de manutencao. Pensei nos microservicos para parte de pagamentos, mas iria ser um overengineering. Uma decisão que eu gostei de ter feito foi jogar para fila do RabbitMQ os pagamentos, assegurando ordem e retirando a carga no backend das requisicoes
 
 
 --Eu queria realizar o deploy mas sabia que com rabbitmq, banco e api mais complexa teria que arcar com um plano para hospedar então decidi deixar a aplicacao local apenas
