@@ -57,7 +57,7 @@ export default function HomePage() {
       .then((data) => {
         if (cancelled) return Promise.resolve();
         setUser(data);
-        if (data.isOrg) return Promise.resolve();
+        if (data.isOrg || data.isPortaria) return Promise.resolve();
         return listCatalogoEventosRequest(token)
           .then((lista) => {
             if (!cancelled) setEventos(lista);
@@ -84,6 +84,10 @@ export default function HomePage() {
 
   if (user?.isOrg) {
     return <Navigate to="/organizador/eventos" replace />;
+  }
+
+  if (user?.isPortaria) {
+    return <Navigate to="/portaria" replace />;
   }
 
   return (
@@ -115,7 +119,7 @@ export default function HomePage() {
               return (
               <li key={filme.idFilme} className="overflow-hidden rounded-2xl border bg-surface">
                 {filme.imgFilme ? (
-                  <img alt="" className="h-48 w-full object-cover" src={filme.imgFilme} />
+                  <img alt="" className="h-50 w-full object-cover" src={filme.imgFilme} />
                 ) : (
                   <div className="poster-empty grid h-48 place-items-center">Sem imagem</div>
                 )}

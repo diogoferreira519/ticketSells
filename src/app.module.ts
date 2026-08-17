@@ -38,6 +38,7 @@ const clientDistPath = join(__dirname, '..', 'client', 'dist');
               '/pagamentos/(.*)',
               '/ingressos/meus',
               '/ingressos/por-codigo/(.*)',
+              '/ingressos/validar',
             ],
           }),
         ]

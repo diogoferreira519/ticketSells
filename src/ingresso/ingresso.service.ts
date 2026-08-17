@@ -30,6 +30,19 @@ export type IngressoPublico = {
   };
 };
 
+export type ValidarIngressoResultado =
+  | 'VALIDO'
+  | 'INVALIDO'
+  | 'JA_UTILIZADO'
+  | 'EVENTO_ERRADO';
+
+export type ValidarIngressoResponse = {
+  resultado: ValidarIngressoResultado;
+  assento?: string;
+  eventoTitulo?: string;
+  usadoEm?: string | null;
+};
+
 @Injectable()
 export class IngressoService {
   constructor(private readonly prisma: PrismaService) {}
@@ -91,6 +104,75 @@ export class IngressoService {
       status: ingresso.status,
       assento: ingresso.assento,
       evento: ingresso.evento,
+    };
+  }
+
+  async validar(
+    qrcode: string,
+    idEvento: string,
+  ): Promise<ValidarIngressoResponse> {
+    const ingresso = await this.prisma.ingresso.findUnique({
+      where: { qrcode },
+      include: {
+        pedido: { select: { pagamentoStatus: true } },
+        assento: { select: { descricao: true } },
+        evento: { select: { titulo: true } },
+      },
+    });
+
+    if (
+      !ingresso ||
+      ingresso.pedido.pagamentoStatus !== 'PAGO' ||
+      ingresso.status === 'CANCELADO'
+    ) {
+      return { resultado: 'INVALIDO' };
+    }
+
+    if (ingresso.idEvento !== idEvento) {
+      return {
+        resultado: 'EVENTO_ERRADO',
+        assento: ingresso.assento.descricao,
+        eventoTitulo: ingresso.evento.titulo,
+      };
+    }
+
+    if (ingresso.status === 'USADO') {
+      return {
+        resultado: 'JA_UTILIZADO',
+        assento: ingresso.assento.descricao,
+        eventoTitulo: ingresso.evento.titulo,
+        usadoEm: ingresso.usadoEm?.toISOString() ?? null,
+      };
+    }
+
+    const usadoEm = new Date();
+    const updated = await this.prisma.ingresso.updateMany({
+      where: { id: ingresso.id, status: 'VALIDO' },
+      data: { status: 'USADO', usadoEm },
+    });
+
+    if (updated.count === 1) {
+      return {
+        resultado: 'VALIDO',
+        assento: ingresso.assento.descricao,
+        eventoTitulo: ingresso.evento.titulo,
+        usadoEm: usadoEm.toISOString(),
+      };
+    }
+
+    const atual = await this.prisma.ingresso.findUnique({
+      where: { id: ingresso.id },
+      include: {
+        assento: { select: { descricao: true } },
+        evento: { select: { titulo: true } },
+      },
+    });
+
+    return {
+      resultado: 'JA_UTILIZADO',
+      assento: atual?.assento.descricao ?? ingresso.assento.descricao,
+      eventoTitulo: atual?.evento.titulo ?? ingresso.evento.titulo,
+      usadoEm: atual?.usadoEm?.toISOString() ?? null,
     };
   }
 }

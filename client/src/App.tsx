@@ -11,6 +11,7 @@ import IngressoPublicoPage from './pages/IngressoPublicoPage';
 import MeusIngressosPage from './pages/MeusIngressosPage';
 import OrganizadorEventosPage from './pages/OrganizadorEventosPage';
 import OrganizadorSalasPage from './pages/OrganizadorSalasPage';
+import PortariaPage from './pages/PortariaPage';
 import RegisterPage from './pages/RegisterPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <MeusIngressosPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portaria"
+              element={
+                <ProtectedRoute>
+                  <PortariaPage />
                 </ProtectedRoute>
               }
             />

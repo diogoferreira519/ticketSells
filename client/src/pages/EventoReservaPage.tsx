@@ -313,6 +313,7 @@ export default function EventoReservaPage() {
                     </div>
                   )}
                   <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  {assentosSelecionados.length > 0 ?
                     <button
                       className="btn-ghost px-5 py-2.5 text-sm"
                       type="button"
@@ -321,6 +322,9 @@ export default function EventoReservaPage() {
                     >
                       Desselecionar
                     </button>
+                    : null
+                  }
+                
                     <button
                       className="btn-primary px-5 py-2.5 text-sm"
                       type="button"

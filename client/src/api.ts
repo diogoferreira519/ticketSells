@@ -206,6 +206,19 @@ export type IngressoPublico = {
   };
 };
 
+export type ValidarIngressoResultado =
+  | 'VALIDO'
+  | 'INVALIDO'
+  | 'JA_UTILIZADO'
+  | 'EVENTO_ERRADO';
+
+export type ValidarIngressoResponse = {
+  resultado: ValidarIngressoResultado;
+  assento?: string;
+  eventoTitulo?: string;
+  usadoEm?: string | null;
+};
+
 function authHeaders(token: string) {
   return { Authorization: `Bearer ${token}` };
 }
@@ -478,4 +491,22 @@ export async function getIngressoPorCodigoRequest(qrcode: string) {
     throw new Error(await parseError(res));
   }
   return (await res.json()) as IngressoPublico;
+}
+
+export async function validarIngressoRequest(
+  token: string,
+  payload: { qrcode: string; idEvento: string },
+) {
+  const res = await fetch('/ingressos/validar', {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(await parseError(res));
+  }
+  return (await res.json()) as ValidarIngressoResponse;
 }
